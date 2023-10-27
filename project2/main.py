@@ -51,7 +51,7 @@ class Main(tk.Frame):
 ########################################################### СОЗДАНИЕ ТАБЛИЦЫ
 
         # Добавляем столбцы
-        self.tree = ttk.Treeview(self, columns=('ID', 'name', 'phone', 'email'), 
+        self.tree = ttk.Treeview(self, columns=('ID', 'name', 'phone', 'email', 'salary'), 
                                  height=45, show='headings')
         
         # Добавить параметры кононкам
@@ -59,12 +59,14 @@ class Main(tk.Frame):
         self.tree.column('name', width=300, anchor=tk.CENTER)
         self.tree.column('phone', width=150, anchor=tk.CENTER)
         self.tree.column('email', width=150, anchor=tk.CENTER)
+        self.tree.column('salary', width=150, anchor=tk.CENTER)
 
         # Подписи колонок
         self.tree.heading('ID', text='ID')
         self.tree.heading('name', text='ФИО')
         self.tree.heading('phone', text='Телефон')
         self.tree.heading('email', text='E-mail')
+        self.tree.heading('salary', text='Зарплата')
 
         # Упаковка
         self.tree.pack(side=tk.LEFT)
@@ -76,8 +78,8 @@ class Main(tk.Frame):
 
 ########################################################### ВСЕ МЕТОДЫ
 
-    def records(self, name, phone, email):
-        self.db.insert_data(name, phone, email)
+    def records(self, name, phone, email, salary):
+        self.db.insert_data(name, phone, email, salary)
         self.view_records()
 
     # Отображение данных в TreeView
@@ -88,10 +90,10 @@ class Main(tk.Frame):
          for row in self.db.cur.fetchall()]
 
     # Метод обновления данных
-    def update_record(self, name, phone, email):
+    def update_record(self, name, phone, email, salary):
         id = self.tree.set(self.tree.selection()[0], '#1')
-        self.db.cur.execute(""" UPDATE users SET name=?, phone=?, email=? WHERE ID=? """,
-                            (name, phone, email, id))
+        self.db.cur.execute(""" UPDATE users SET name=?, phone=?, email=?, salary=? WHERE ID=? """,
+                            (name, phone, email, salary, id))
         self.db.conn.commit()
         self.view_records()
         
@@ -139,6 +141,7 @@ class Child(tk.Toplevel):
         self.entry_name.delete(0, tk.END)
         self.entry_phone.delete(0, tk.END)
         self.entry_email.delete(0, tk.END)
+        self.entry_salary.delete(0, tk.END)
 
     def init_child(self):
         self.title('Добавить контакт')
@@ -153,12 +156,16 @@ class Child(tk.Toplevel):
         label_phone.place(x=50, y=80)
         label_email = tk.Label(self, text='E-mail: ')
         label_email.place(x=50, y=110)
+        label_salary = tk.Label(self, text='Зарплата: ')
+        label_salary.place(x=50, y=140)
         self.entry_name = ttk.Entry(self)
         self.entry_name.place(x=200, y=50)
         self.entry_phone = ttk.Entry(self)
         self.entry_phone.place(x=200, y=80)
         self.entry_email = ttk.Entry(self)
         self.entry_email.place(x=200, y=110)
+        self.entry_salary = ttk.Entry(self)
+        self.entry_salary.place(x=200, y=140)
 ###########################################################
 
         # Кнопка закрытия
@@ -171,7 +178,8 @@ class Child(tk.Toplevel):
         self.btn_add.bind('<Button-1>', lambda event:
                           self.view.records(self.entry_name.get(),
                                             self.entry_phone.get(),
-                                            self.entry_email.get()))
+                                            self.entry_email.get(),
+                                            self.entry_salary.get()))
         self.btn_add.bind('<Button-1>', lambda event: self.clear_entry(), add='+')
 
 ###########################################################
@@ -192,7 +200,8 @@ class Update(Child):
         self.btn_upd.bind('<Button-1>', lambda event:
                           self.view.update_record(self.entry_name.get(),
                                             self.entry_phone.get(),
-                                            self.entry_email.get()))
+                                            self.entry_email.get(),
+                                            self.entry_salary.get()))
         self.btn_upd.bind('<Button-1>', lambda event: self.destroy(), add='+')
         self.btn_upd.place(x=200, y=170)
 
@@ -204,6 +213,7 @@ class Update(Child):
         self.entry_name.insert(0, row[1])
         self.entry_phone.insert(0, row[2])
         self.entry_email.insert(0, row[3])
+        self.entry_salary.insert(0, row[4])
 
 
 ###########################################################
@@ -249,12 +259,13 @@ class DB:
                                 id INTEGER PRIMARY KEY NOT NULL,
                                 name TEXT,
                                 phone TEXT,
-                                email TEXT )""")
+                                email TEXT, 
+                                salary TEXT )""")
         self.conn.commit()
 
-    def insert_data (self, name, phone, email):
-        self.cur.execute(""" INSERT INTO users (name, phone, email)
-                         VALUES (?, ?, ?)""", (name, phone, email))
+    def insert_data (self, name, phone, email, salary):
+        self.cur.execute(""" INSERT INTO users (name, phone, email, salary)
+                         VALUES (?, ?, ?, ?)""", (name, phone, email, salary))
         self.conn.commit()
 ###########################################################
 
@@ -263,8 +274,8 @@ if __name__ == '__main__':
     db = DB()
     app = Main(root)
     app.pack()
-    root.title('Телефонная книга')
-    root.geometry('645x450')
+    root.title('Список сотрудников компании')
+    root.geometry('780x450')
     root.resizable(False,False)
     root.configure(bg='White')
     root.mainloop()
